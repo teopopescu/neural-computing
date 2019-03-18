@@ -40,19 +40,49 @@ end
 %% MLP model
 %{
 Order of code:
-SVM order
--data split
--Bootstrapping aggregating
--train and validation set (create function here) 
+-Data split x
+-Bootstrapping aggregating x
+-Train and validation set (create function here)  x
 
 -Split into training and test set
--fit model
--Grid search
-    -learning rate
-    -number of epochs
-    2 more
+-Fit model
+-Grid search : Justify why you chose some over the others;
+    -Learning rate;
+    -Alpha (Learning rate decay factor) 
+    -Training function
+    -Size of hidden layers
+    -Activation function (sigmoid, softmax, tanh, RELU) 
+    -Max number of epochs
+
+Comment on early stopping and minimum training performance;
+
+https://uk.mathworks.com/help/deeplearning/ref/network.html
+https://uk.mathworks.com/matlabcentral/answers/310935-in-neural-network-toolbox-how-can-i-can-change-the-values-of-training-parameters
+
+    'activation': ['tanh', 'relu'],
+    'solver': ['sgd', 'adam'],
+    'alpha': [0.0001, 0.05],
+    'learning_rate': ['constant','adaptive'],
+
+The batch size is a hyperparameter of gradient descent that controls the number of training samples to work through before the model’s internal parameters are updated.
+The number of epochs is a hyperparameter of gradient descent that controls the number of complete passes through the training dataset.
+
 -Best model selection
 -Use best model on test set;
 
 Grid search
 %}
+
+%First application of the model using default parameters
+
+% Create a Fitting Network
+hiddenLayerSize = 10;
+model = fitnet(hiddenLayerSize,'traingd');
+
+% Train the Network
+[model,tr] = train(model,train(train_idx{1},1:13),train(train_idx{1},14));
+
+%Prediction
+label=predict(model,train(val_idx{1},1:13));
+target= table2array(train(val_idx{1},14));
+
