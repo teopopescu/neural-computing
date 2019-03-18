@@ -29,6 +29,8 @@ fprintf('Percentage of disease cases : %f ',disease_rate)
 
 fprintf('\nPercentage of no disease cases : %f ',(1-disease_rate))
 
+% Add visualization of Percentage of disease vs no disease
+
 
 %% ANALYSIS AND BASIC STATISTICS
 % first summary of the data
@@ -64,7 +66,7 @@ Skewthalach = splitapply(@skewness,data2.thalach,G);
 Maxthalach = splitapply(@max,data2.thalach,G);
 Minthalach = splitapply(@min,data2.thalach,G);
 
-
+%Add visualization for these descriptive statistics
 
 %Graphs
 %Age distribution

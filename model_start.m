@@ -37,6 +37,22 @@ end
 
 %randi() allows to sample with replacement since we can have the same random number multiple times 
 
-%% SVM Model
+%% MLP model
+%{
+Order of code:
+SVM order
+-data split
+-Bootstrapping aggregating
+-train and validation set (create function here) 
 
+-Split into training and test set
+-fit model
+-Grid search
+    -learning rate
+    -number of epochs
+    2 more
+-Best model selection
+-Use best model on test set;
 
+Grid search
+%}
