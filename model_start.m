@@ -86,3 +86,6 @@ model = fitnet(hiddenLayerSize,'traingd');
 label=predict(model,train(val_idx{1},1:13));
 target= table2array(train(val_idx{1},14));
 
+
+%Finish all the code by 8pm; start writing paper 21:30
+
