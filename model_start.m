@@ -12,13 +12,13 @@ P = 0.85 ;
 % Random split using index
 idx = randperm(rows);
 
-train = data_norm(idx(1:round(P*rows)),:) ; 
+training_table = data_norm(idx(1:round(P*rows)),:) ; 
 test = data_norm(idx(round(P*rows)+1:end),:) ;
 
 %% Bootstrapping aggregating (5 bags)
 
 %to get train set dimensions 
-[train_rows,train_columns] = size(train);
+[train_rows,train_columns] = size(training_table);
 
 %Only the index will be stored, this makes the code scalable to large datasets
 %reducing memory usage.
@@ -75,26 +75,33 @@ https://uk.mathworks.com/matlabcentral/answers/310935-in-neural-network-toolbox-
 -Use best model on test set;
 
 %}
+features = training_table{:,1:13};
+labels = training_table{:,14};
 
 %First application of the model using default parameters
 
 % Create a Fitting Network
 hiddenLayerSize = 10;
-model = fitnet(hiddenLayerSize,'traingd');
+model = patternnet(hiddenLayerSize,'traingda');
 
+
+feat=training_table{:,1:13};
+lab=training_table{:,14};
+initial_features =transpose(feat);
+initial_labels = transpose(lab);
 % Train the Network
-[model,tr] = train(model,train(train_idx{1},1:13),train(train_idx{1},14));
+[model_2,tr] = train(model,features,labels); 
 
 %Prediction
-label=predict(model,train(val_idx{1},1:13));
-target= table2array(train(val_idx{1},14));
+label=predict(model,training_table(val_idx{1},1:13));
+target= table2array(training_table(val_idx{1},14));
 
 %Grid search 
 initialize_hyperparameters;
 learning_rate=[0.001 0.003 0.01 0.03 0.1 0.3 1]; %Learning rate hyperparameters
 momentum =[0.5 0.6 0.7 0.9]; %Momentum hyperparameter
-number_of_epochs=[10 20 30] %Number of epochs hyperparameter
-batch_size = [32 64 128 256] %Batch size hyperparameter
+number_of_epochs=[10 20 30]; %Number of epochs hyperparameter
+batch_size = [32 64 128 256]; %Batch size hyperparameter
 % https://towardsdatascience.com/what-are-hyperparameters-and-how-to-tune-the-hyperparameters-in-a-deep-neural-network-d0604917584a
 for z= 1:length(train_idx)
     for rate = learning_rate
@@ -103,10 +110,10 @@ for z= 1:length(train_idx)
                 %for batch = batch_size
                 %check stack overflow neural network training batch size; 
                 %Split predictors and target variables
-                train_features=train(train_idx{z},1:13);
-                train_labels=train(train_idx{z},14);
-                validation_features=train(val_idx{z},1:13);
-                validation_labels=train(val_idx{z},14);
+                train_features=training_table(train_idx{z},1:13);
+                train_labels=training_table(train_idx{z},14);
+                validation_features=training_table(val_idx{z},1:13);
+                validation_labels=training_table(val_idx{z},14);
                 %Set up the training function
                 %trainFcn = 'trainscg';  % Scaled conjugate gradient backpropagation.
                 trainFcn ='traingscg' % Gradient descent with adaptive learning rate backpropagation
@@ -127,7 +134,7 @@ for z= 1:length(train_idx)
                 
                   
                 % Train the Network
-                [net,tr] = train(net,train_features,train_labels);
+                [net,tr] = training_table(net,train_features,train_labels);
                 end_time=cputime;
                 training_time=end_time-start_time;
 
