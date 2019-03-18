@@ -66,7 +66,7 @@ Skewthalach = splitapply(@skewness,data2.thalach,G);
 Maxthalach = splitapply(@max,data2.thalach,G);
 Minthalach = splitapply(@min,data2.thalach,G);
 
-%Add visualization for these descriptive statistics
+%Add visualization/Excel table for these descriptive statistics
 
 %Graphs
 %Age distribution
@@ -90,7 +90,7 @@ hold off
 %% SMOTE
 
 
-%From 45%-55% to 50%-50% duplicating desease observations. The Dataset is
+%From 45%-5 5% to 50%-50% duplicating desease observations. The Dataset is
 %slightly unbalanced, but it is in general a good practice in health care. 
 %Usually the number of observations with a specific disease are only a small
 %portion of the population (dataset)

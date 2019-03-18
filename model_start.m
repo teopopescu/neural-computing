@@ -37,7 +37,11 @@ end
 
 %randi() allows to sample with replacement since we can have the same random number multiple times 
 
+
+
 %% MLP model
+
+
 %{
 Order of code:
 -Data split x
@@ -48,8 +52,9 @@ Order of code:
 -Fit model
 -Grid search : Justify why you chose some over the others;
     -Learning rate;
+    -Momentum
     -Alpha (Learning rate decay factor) 
-    -Training function
+    -Training function will stay the same 
     -Size of hidden layers
     -Activation function (sigmoid, softmax, tanh, RELU) 
     -Max number of epochs

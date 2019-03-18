@@ -55,6 +55,9 @@ mdlSVM = fitPosterior(model);
 [X,Y,T,AUC] = perfcurve(target,label,1);
 % plot the ROC AUC <-- add title and description 
 plot(X,Y)
+xlabel('False positive rate') 
+ylabel('True positive rate')
+title('ROC for Classification by SVM')
 
 %% GRID SEARCH ALGORITHM, 
 % inner loop using various number of predictor, the
