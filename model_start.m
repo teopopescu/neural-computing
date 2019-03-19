@@ -79,23 +79,25 @@ features = training_table{:,1:13};
 labels = training_table{:,14};
 
 %First application of the model using default parameters
-
+%%
 % Create a Fitting Network
 hiddenLayerSize = 10;
-model = patternnet(hiddenLayerSize,'traingda');
+net = patternnet(hiddenLayerSize,'traingda');
 
+%
 
 feat=training_table{:,1:13};
 lab=training_table{:,14};
 initial_features =transpose(feat);
 initial_labels = transpose(lab);
 % Train the Network
-[model_2,tr] = train(model,features,labels); 
+[net,tr] = train(net,features',labels'); 
 
-%Prediction
-label=predict(model,training_table(val_idx{1},1:13));
-target= table2array(training_table(val_idx{1},14));
+%%
+new_label=net(features');
+%target= table2array(training_table(val_idx{1},14));
 
+%%
 %Grid search 
 initialize_hyperparameters;
 learning_rate=[0.001 0.003 0.01 0.03 0.1 0.3 1]; %Learning rate hyperparameters
@@ -114,44 +116,51 @@ for z= 1:length(train_idx)
                 train_labels=training_table(train_idx{z},14);
                 validation_features=training_table(val_idx{z},1:13);
                 validation_labels=training_table(val_idx{z},14);
+                
+                %CHECK IF YOU NEED THIS
+                train_feat = table2array(train_features)
+                train_lab = table2array(train_labels)
+                valid_feat = table2array(validation_features)
+                valid_lab = table2array(validation_labels)
+                
                 %Set up the training function
                 %trainFcn = 'trainscg';  % Scaled conjugate gradient backpropagation.
-                trainFcn ='traingscg' % Gradient descent with adaptive learning rate backpropagation
+                trainFcn ='trainscg' % Gradient descent with adaptive learning rate backpropagation
                 hiddenLayerSize = 10;
                 start_time=cputime;
                 % Create a Pattern Recognition Network
                 net = patternnet(hiddenLayerSize, trainFcn,'crossentropy');
                 net.trainParam.epochs=epoch
                 net.trainParam.lr=rate
+                % DOUBLE CHECK THIS
+                %YOU CAN USE
+                % net.trainParam.mc = momentum_rate
                 net.trainParam.lr_inc=1+momentum_rate;
               
                 view(net)
-                %Set network hyperparameters
-               % options = trainingOptions('Momentum',momentum_rate ,...
-                %                          'MaxEpochs',epoch ,...
-                 %                         'MiniBatchSize',batch,...
-                  %                        'LearnRateDropFactor',rate);
-                
-                  
                 % Train the Network
-                [net,tr] = training_table(net,train_features,train_labels);
+                %ACTUAL TRAINING HAPPENS HERE
+                [net,tr] = train(net,train_feat',train_lab');
                 end_time=cputime;
                 training_time=end_time-start_time;
 
                 %%Compute prediction 
-                    YPred_train = predict(net,train_features)
-                    YPred_validation = predict(net,validation_features);
-                
+                %%
+                YPred_train =net(train_feat')
+                YPred_validation = net(valid_feat');
+                %%
                     %Compute model accuracy  
-                  train_ya=table2array(validation_labels);
-                  train_yatrain=table2array(training_labels);
-                  train_yd=double(train_ya);
-                  train_ydtrain=double(train_yatrain);
-                  
-              
+%                   train_ya=table2array(valid_lab);
+%                   train_yatrain=table2array(train_lab);
+%                   train_yd=double(train_ya);
+%                   train_ydtrain=double(train_yatrain);
+%                   
+                YPred_train = YPred_train'
+                YPred_validation= YPred_validation'
                 %Confusion matrices and its values using validatio set to test results                   
-                 confusion = confusionmat(train_yd,YPred_validation);
+                 confusion = confusionmat(valid_lab,YPred_validation);
                  %TrueNegative | TruePositive | FalseNegative | FalsePositive
+                 %CHANGE THIS
                  TN=confusion(1,1);
                  TP=confusion(2,2);
                  FN=confusion(2,1);
@@ -159,7 +168,7 @@ for z= 1:length(train_idx)
                 
                   %Confusion matrices and its values using training
                                         %set to test results
-                 confusion2 = confusionmat(train_ydtrain,YPred_train);
+                 confusion2 = confusionmat(train_lab,YPred_train);
                  TN2=confusion2(1,1);
                  TP2=confusion2(2,2);
                  FN2=confusion2(2,1);
@@ -169,14 +178,16 @@ for z= 1:length(train_idx)
                   Accuracy=(TN+TP)/(TN+TP+FN+FP);
                   AccuracyTrain=(TN2+TP2)/(TN2+TP2+FN2+FP2);
 
-                 
+                % CHECK THIS
+                %DOES NOT APPEND ALL VALUES
                 %Save the results into one table
                 learning_rate_list=[learning_rate_list;rate];
                 momentum_list=[momentum_list;momentum_rate];
                 number_of_epochs_list=[number_of_epochs_list;epoch];
                 %batch_size_list = [batch_size_list;batch_size];
                 accuracy_list=[accuracy_list; AccuracyTrain];
-                cross_entropy_list=[cross_entropy_list;perform(net,train_features,train_labels)];
+                % I DONT UNDERSTAND THIS BIT SO COMMENTED OUT
+                %cross_entropy_list=[cross_entropy_list;perform(net,train_features,train_labels)];
                 time_list=[time_list;training_time];
             end
         end
