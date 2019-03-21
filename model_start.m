@@ -47,37 +47,6 @@ end
 
 %% MLP model
 
-
-%{
-Order of code:
-
-
--Train and validation set (create function here)  x
-
--Grid search : Justify why you chose some over the others;
-    -Learning rate; <-- plot it on a graph for the best model; Learning
-    rates: 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1
-    -Momentum: 
-    -Activation function (sigmoid, softmax, tanh, RELU) 
-    -Alpha (Learning rate decay factor)  
-    -Training function will stay the same 
-    -Size of hidden layers
-    -Max number of epochs
-
-Comment on early stopping and minimum training performance;
-Comment on batch size and nb of epochs
-
-https://uk.mathworks.com/help/deeplearning/ref/network.html
-https://uk.mathworks.com/matlabcentral/answers/310935-in-neural-network-toolbox-how-can-i-can-change-the-values-of-training-parameters
-
-    'activation': ['tanh', 'relu'],
-    'solver': ['sgd', 'adam'],
-    'alpha': [0.0001, 0.05],
-    'learning_rate': ['constant','adaptive'],
-
-% https://towardsdatascience.com/what-are-hyperparameters-and-how-to-tune-the-hyperparameters-in-a-deep-neural-network-d0604917584a
-
-%}
 features = training_table{:,1:13};
 labels = training_table{:,14};
 
@@ -93,8 +62,6 @@ initial_features =transpose(feat);
 initial_labels = transpose(lab);
 % Train the Network
 [net,tr] = train(net,features',labels'); 
-
-%%What is this line of code doing?
 new_label=net(features');
 %target= table2array(training_table(val_idx{1},14));
 
@@ -131,38 +98,25 @@ for z= 1:length(train_idx)
                     net = patternnet(hiddenLayerSize, trainFcn,'crossentropy');
                     net.trainParam.epochs=epoch
                     net.trainParam.lr=rate
+                    %https://uk.mathworks.com/help/deeplearning/ug/neural-network-training-concepts.html
+                    %Need to add batch size
                   
                     net.trainParam.mc = momentum_rate
                     %net.trainParam.lr_inc=1+momentum_rate;
                     
                     % Train the Network
-                    %ACTUAL TRAINING HAPPENS HERE
                     [net,tr] = train(net,train_feat',train_lab');
                     end_time=cputime;
                     training_time=end_time-start_time;
                     
-                    %How to train a neural net for classification from documentation
-                    %net = train(net,train_feat',train_lab');
-                    %y = net(train_feat');
-                    %perf = perform(net,train_lab',y);
-                    %classes = vec2ind(y);
-
-                    %%Compute prediction for train set
-                    %YPred_train =net(train_feat')
-                    %cross_entropy_train = perform(net,train_lab',YPred_train);
-                    %classes_train = vec2ind(YPred_train);
-                    
+                   
                     %%Compute prediction for validation set
                     YPred_validation = net(valid_feat');
                     cross_entropy_validation = perform(net,valid_lab',YPred_validation);
                     predicted_classes_validation = vec2ind(YPred_validation);
-
-                    %YPred_train = YPred_train'
                     YPred_validation=YPred_validation'
                 
                  %Confusion matrices and its values using validation set to test results
-                 %confusion = confusionmat(valid_lab,YPred_validation);
-                 %confusion = confusionmat(train_lab,classes_train');
                   confusion = confusionmat(valid_lab,predicted_classes_validation');
                  %TrueNegative | TruePositive | FalseNegative | FalsePositive
             
@@ -172,18 +126,8 @@ for z= 1:length(train_idx)
                  FN=confusion(2,1);
                  FP=confusion(1,2);
                 
-                  %Confusion matrices and its values using validation set to test results
-                 %confusion2 = confusionmat(train_lab,classes');
-                 %confusion2 = confusionmat(valid_lab,predicted_classes_validation');
-                 %TN2=confusion2(1,1);
-                 %TP2=confusion2(2,2);
-                 %FN2=confusion2(2,1);
-                 %FP2=confusion2(1,2);
-                                        
-                 %Accuracy
-                  %accuracy_train=(TN+TP)/(TN+TP+FN+FP);
-                   accuracy=(TN+TP)/(TN+TP+FN+FP);
-                  %accuracy_validation=(TN2+TP2)/(TN2+TP2+FN2+FP2);
+                accuracy=(TN+TP)/(TN+TP+FN+FP);
+              
 
                %Save the results into one table
                 learning_rate=[learning_rate;rate];
@@ -213,15 +157,13 @@ writetable(mlp_models, 'MLP_models.csv')
 best_mlp_model =mlp_models(1,:);
 writetable(best_mlp_model, 'Best_MLP_model.csv')
 
-% Select best model and run on test set;
-
-%Train again the best model and predict on train set, get predicted labels and save on a comparison file
+%%Training again the best model and predict on train set, getting predicted labels and saving on a comparison file
 
  %Set up the training function
  trainFcn ='trainscg' % Gradient descent with adaptive learning rate backpropagation
  hiddenLayerSize = 10;
  final_training_start_time=cputime;
-                    % Create a Pattern Recognition Network
+                   % Create a Pattern Recognition Network
                     net = patternnet(hiddenLayerSize, trainFcn,'crossentropy');
                     net.trainParam.lr=table2array(best_mlp_model(1,1))
                     %net.trainParam.lr_inc=1+momentum_rate;
@@ -267,5 +209,11 @@ final_confusion = confusionmat(test_labels,predicted_classes_test');
 %Plot confusion matrix between target test labels and predicted test labels
 plotconfusion(categorical(test_labels),categorical(predicted_classes_test'));
 
+%{
+To do:
+-Add batch size to nets
+-Change confusion matrices if needed
+-Indent code
+%}
 
 
