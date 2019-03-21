@@ -1,0 +1,2 @@
+learning_rate_list,momentum_list,number_of_epochs_list,batch_size_list1,batch_size_list2,batch_size_list3,batch_size_list4,accuracy_train_list,accuracy_validation_list,cross_entropy_list,validation_list,time_list
+0.001,0.5,10,16,32,64,128,0.547085201793722,0.5,0.704774155806724,0.436805185887702,0.265625

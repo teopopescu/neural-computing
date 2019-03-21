@@ -2,13 +2,7 @@
 %data loading
 data =readtable('clean.csv');
 
-%SMOTE
-[SMOTE_features,SMOTE_labels]=SMOTE( data{:,1:13},  data{:,14});
-SMOTE_features = array2table(SMOTE_features);
-SMOTE_labels = array2table(SMOTE_labels);
-smote_data = [SMOTE_features SMOTE_labels]
-writetable(smote_data, 'SMOTE_clean.csv')
-normalization [0,1]
+%normalization [0,1]
 data_norm =normalize(data,'range');
 
 %train and test sets
@@ -42,6 +36,9 @@ for i=1:5
 end
 
 %randi() allows to sample with replacement since we can have the same random number multiple times 
+
+%% 10-fold cross validation
+
 
 
 %% MLP model
@@ -152,15 +149,14 @@ for z= 1:length(train_idx)
                     
                     %%Compute prediction for validation set
                     YPred_validation = net(valid_feat');
-                    cross_entropy_validation = perform(net,valid_lab',YPred_validation);
+                    cross_entropy_validation = perform(net,valid_lab',YPred_train);
                     classes_validation = vec2ind(YPred_validation);
 
                     YPred_train = YPred_train'
                     YPred_validation= YPred_validation'
                 
-                 %Confusion matrices and its values using training set to test results
-                 %confusion = confusionmat(valid_lab,YPred_validation);
-                 confusion = confusionmat(train_lab,classes_train');
+                 %Confusion matrices fo and its values using validation set to test results                   
+                 confusion = confusionmat(valid_lab,YPred_validation);
                  %TrueNegative | TruePositive | FalseNegative | FalsePositive
             
                  %CHANGE THIS
@@ -169,25 +165,23 @@ for z= 1:length(train_idx)
                  FN=confusion(2,1);
                  FP=confusion(1,2);
                 
-                  %Confusion matrices and its values using validation set to test results
-                 %confusion2 = confusionmat(train_lab,classes');
-                 confusion2 = confusionmat(valid_lab,classes_validation');
+                  %Confusion matrices and its values using training set to test results
+                 confusion2 = confusionmat(train_lab,classes');
                  TN2=confusion2(1,1);
                  TP2=confusion2(2,2);
                  FN2=confusion2(2,1);
                  FP2=confusion2(1,2);
                                         
                  %Accuracy
-                  accuracy_train=(TN+TP)/(TN+TP+FN+FP);
-                  accuracy_validation=(TN2+TP2)/(TN2+TP2+FN2+FP2);
+                  Accuracy=(TN+TP)/(TN+TP+FN+FP);
+                  AccuracyTrain=(TN2+TP2)/(TN2+TP2+FN2+FP2);
 
                %Save the results into one table
                 learning_rate_list=[learning_rate_list;rate];
                 momentum_list=[momentum_list;momentum_rate];
                 number_of_epochs_list=[number_of_epochs_list;epoch];
                 batch_size_list = [batch_size_list;batch_size];
-                accuracy_train_list=[accuracy_train_list; accuracy_train];
-                accuracy_validation_list=[accuracy_validation_list;accuracy_validation];
+                accuracy_list=[accuracy_list; 1-cross_entropy_train]; 
                 cross_entropy_list=[cross_entropy_list;1-cross_entropy_train];
                 validation_list =[validation_list;1-cross_entropy_validation];
                 time_list=[time_list;training_time];
@@ -199,7 +193,7 @@ end
 
 %% Merge models' results into one table
 perform_type_conversion;
-mlp_models = [learning_rate_list momentum_list number_of_epochs_list batch_size_list accuracy_train_list accuracy_validation_list cross_entropy_list validation_list time_list]
+mlp_models = [learning_rate_list momentum_list number_of_epochs_list batch_size_list accuracy_list cross_entropy_list validation_list time_list]
 
 mlp_models = sortrows(mlp_models,8 ,{'descend'});
 writetable(mlp_models, 'MLP_models.csv')
