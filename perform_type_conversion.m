@@ -1,9 +1,9 @@
-learning_rate_list=array2table(learning_rate_list);
-momentum_list =array2table(momentum_list);
-number_of_epochs_list=array2table(number_of_epochs_list);
-batch_size_list =array2table(batch_size_list);
-accuracy_train_list=array2table(accuracy_train_list);
-accuracy_validation_list=array2table(accuracy_validation_list);
-validation_list=array2table(validation_list);
-cross_entropy_list=array2table(cross_entropy_list);
-time_list=array2table(time_list);
+learning_rate=array2table(learning_rate);
+momentum =array2table(momentum);
+number_of_epochs=array2table(number_of_epochs);
+batch_size =array2table(batch_size);
+accuracy_indicator=array2table(accuracy_indicator);
+validation=array2table(validation);
+cross_entropy=array2table(cross_entropy);
+time=array2table(time);
+

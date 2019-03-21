@@ -1,9 +1,9 @@
-learning_rate_list=[];
-momentum_list =[];
-number_of_epochs_list=[];
-batch_size_list = [];
-accuracy_train_list=[];
-accuracy_validation_list=[];
-validation_list=[];
-cross_entropy_list=[];
-time_list=[];
+learning_rate=[];
+momentum=[];
+number_of_epochs=[];
+batch_size=[];
+accuracy_indicator=[];
+validation=[];
+cross_entropy=[];
+time=[];
+

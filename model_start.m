@@ -1,14 +1,15 @@
 %% Data split
 %data loading
-data =readtable('clean.csv');
+initial_data =readtable('clean.csv');
 
 %SMOTE
-[SMOTE_features,SMOTE_labels]=SMOTE( data{:,1:13},  data{:,14});
+[SMOTE_features,SMOTE_labels]=SMOTE( initial_data{:,1:13},  initial_data{:,14});
 SMOTE_features = array2table(SMOTE_features);
 SMOTE_labels = array2table(SMOTE_labels);
 smote_data = [SMOTE_features SMOTE_labels]
-writetable(smote_data, 'SMOTE_clean.csv')
-normalization [0,1]
+writetable(smote_data, 'post-SMOTE-clean.csv')
+data =readtable('post-SMOTE-clean.csv');
+%normalization [0,1]
 data_norm =normalize(data,'range');
 
 %train and test sets
@@ -99,16 +100,17 @@ new_label=net(features');
 
 %%
 %Grid search 
+%Training is happening on training set, prediction on validation set and accuracy and cross entropy are computed for each validation set
 initialize_hyperparameters;
-learning_rate=[0.001 0.003 0.01 0.03 0.1 0.3 1]; %Learning rate hyperparameters
-momentum =[0.5 0.6 0.7 0.9]; %Momentum hyperparameter
-number_of_epochs=[10 20 30]; %Number of epochs hyperparameter
-batch_size = [16 32 64 128]; %Batch size hyperparameter
+learning_rate_list=[0.001 0.003 0.01 0.03 0.1 0.3 1]; %Learning rate hyperparameters
+momentum_list =[0.5 0.6 0.7 0.9]; %Momentum hyperparameter
+number_of_epochs_list=[10 20 30]; %Number of epochs hyperparameter
+batch_size_list = [16 32 64 128]; %Batch size hyperparameter
 for z= 1:length(train_idx)
-    for rate = learning_rate
-        for momentum_rate =momentum
-            for epoch = number_of_epochs
-                for batch = batch_size
+    for rate = learning_rate_list
+        for momentum_rate =momentum_list
+            for epoch = number_of_epochs_list
+                for batch = batch_size_list
                 %Split predictors and target variables
                     train_features=training_table(train_idx{z},1:13);
                     train_labels=training_table(train_idx{z},14);
@@ -146,21 +148,22 @@ for z= 1:length(train_idx)
                     %classes = vec2ind(y);
 
                     %%Compute prediction for train set
-                    YPred_train =net(train_feat')
-                    cross_entropy_train = perform(net,train_lab',YPred_train);
-                    classes_train = vec2ind(YPred_train);
+                    %YPred_train =net(train_feat')
+                    %cross_entropy_train = perform(net,train_lab',YPred_train);
+                    %classes_train = vec2ind(YPred_train);
                     
                     %%Compute prediction for validation set
                     YPred_validation = net(valid_feat');
                     cross_entropy_validation = perform(net,valid_lab',YPred_validation);
-                    classes_validation = vec2ind(YPred_validation);
+                    predicted_classes_validation = vec2ind(YPred_validation);
 
-                    YPred_train = YPred_train'
-                    YPred_validation= YPred_validation'
+                    %YPred_train = YPred_train'
+                    YPred_validation=YPred_validation'
                 
-                 %Confusion matrices and its values using training set to test results
+                 %Confusion matrices and its values using validation set to test results
                  %confusion = confusionmat(valid_lab,YPred_validation);
-                 confusion = confusionmat(train_lab,classes_train');
+                 %confusion = confusionmat(train_lab,classes_train');
+                  confusion = confusionmat(valid_lab,predicted_classes_validation');
                  %TrueNegative | TruePositive | FalseNegative | FalsePositive
             
                  %CHANGE THIS
@@ -171,26 +174,28 @@ for z= 1:length(train_idx)
                 
                   %Confusion matrices and its values using validation set to test results
                  %confusion2 = confusionmat(train_lab,classes');
-                 confusion2 = confusionmat(valid_lab,classes_validation');
-                 TN2=confusion2(1,1);
-                 TP2=confusion2(2,2);
-                 FN2=confusion2(2,1);
-                 FP2=confusion2(1,2);
+                 %confusion2 = confusionmat(valid_lab,predicted_classes_validation');
+                 %TN2=confusion2(1,1);
+                 %TP2=confusion2(2,2);
+                 %FN2=confusion2(2,1);
+                 %FP2=confusion2(1,2);
                                         
                  %Accuracy
-                  accuracy_train=(TN+TP)/(TN+TP+FN+FP);
-                  accuracy_validation=(TN2+TP2)/(TN2+TP2+FN2+FP2);
+                  %accuracy_train=(TN+TP)/(TN+TP+FN+FP);
+                   accuracy=(TN+TP)/(TN+TP+FN+FP);
+                  %accuracy_validation=(TN2+TP2)/(TN2+TP2+FN2+FP2);
 
                %Save the results into one table
-                learning_rate_list=[learning_rate_list;rate];
-                momentum_list=[momentum_list;momentum_rate];
-                number_of_epochs_list=[number_of_epochs_list;epoch];
-                batch_size_list = [batch_size_list;batch_size];
-                accuracy_train_list=[accuracy_train_list; accuracy_train];
-                accuracy_validation_list=[accuracy_validation_list;accuracy_validation];
-                cross_entropy_list=[cross_entropy_list;1-cross_entropy_train];
-                validation_list =[validation_list;1-cross_entropy_validation];
-                time_list=[time_list;training_time];
+                learning_rate=[learning_rate;rate];
+                momentum=[momentum;momentum_rate];
+                number_of_epochs=[number_of_epochs;epoch];
+                batch_size = [batch_size;batch];
+                accuracy_indicator=[accuracy_indicator; accuracy];
+                %accuracy_validation_list=[accuracy_validation_list;accuracy_validation];
+                %cross_entropy_list=[cross_entropy_list;1-cross_entropy_train];
+                cross_entropy=[cross_entropy;1-cross_entropy_validation];
+                %validation_list =[validation_list;1-cross_entropy_validation];
+                time=[time;training_time];
                 end
             end
         end
@@ -199,36 +204,68 @@ end
 
 %% Merge models' results into one table
 perform_type_conversion;
-mlp_models = [learning_rate_list momentum_list number_of_epochs_list batch_size_list accuracy_train_list accuracy_validation_list cross_entropy_list validation_list time_list]
+mlp_models = [learning_rate momentum number_of_epochs batch_size accuracy_indicator cross_entropy time]
 
-mlp_models = sortrows(mlp_models,8 ,{'descend'});
+mlp_models = sortrows(mlp_models,5 ,{'descend'});
 writetable(mlp_models, 'MLP_models.csv')
 
-%%Select best model and run on test set;
-
 %Take the model with highest accuracy and store it separately;
-
 best_mlp_model =mlp_models(1,:);
 writetable(best_mlp_model, 'Best_MLP_model.csv')
 
+% Select best model and run on test set;
+
 %Train again the best model and predict on train set, get predicted labels and save on a comparison file
-final_training_start_time=cputime;
 
-%Fix confusion matrix on grid search 
-%Sort out cross-validation/bootstrap aggregation issue 16:30
-
-%Compute final model accuracy on train set
-
-% Predict final results (labels and score matrix) on train set
-
-% Save the results of predictions for train set
+ %Set up the training function
+ trainFcn ='trainscg' % Gradient descent with adaptive learning rate backpropagation
+ hiddenLayerSize = 10;
+ final_training_start_time=cputime;
+                    % Create a Pattern Recognition Network
+                    net = patternnet(hiddenLayerSize, trainFcn,'crossentropy');
+                    net.trainParam.lr=table2array(best_mlp_model(1,1))
+                    %net.trainParam.lr_inc=1+momentum_rate;
+                    net.trainParam.mc = table2array(best_mlp_model(1,2))
+                    net.trainParam.epochs=table2array(best_mlp_model(1,3))
+                 
+                   %Prepare training and test set
+                   %Split test set into features and labels
+                  training_features=training_table(:,1:13);
+                  training_features=table2array(training_features);
+                  training_labels=training_table(:,14);
+                  training_labels=table2array(training_labels);
+                  test_features = table2array(test(:,1:13));
+                  test_labels =table2array(test(:,14));
+        
+                    % Train the Network
+                    %ACTUAL TRAINING HAPPENS HERE
+                    [net,tr] = train(net,training_features',training_labels');
+                    end_time=cputime;
+                    training_time=end_time-start_time;
 
 %%Predict Results on the test set
-%Split test set into features and labels
+pred_test = net(test_features');
+cross_entropy_test = perform(net,test_labels',pred_test);
+predicted_classes_test = vec2ind(pred_test);
 
-%Compute final accuracy
+final_results = [array2table(test_labels) array2table(predicted_classes_test')];
+VarNames = {'target','test_predictions'};
+final_results.Properties.VariableNames = VarNames;
+writetable(final_results,'MLP_Final_Labels.csv');
 
-%Confusion Matrix between target test labels and predicted test labels
+%%Compute final accuracy
+final_confusion = confusionmat(test_labels,predicted_classes_test');
+% Confusion Matrix between target test labels and predicted test labels
+%TrueNegative | TruePositive | FalseNegative | FalsePositive
+                 final_TN=final_confusion(1,1);
+                 final_TP=final_confusion(2,2);
+                 final_FN=final_confusion(2,1);
+                 final_FP=final_confusion(1,2);
+                 final_accuracy=(final_TN+final_TP)/(final_TN+final_TP+final_FN+final_FP);
+
+
+%Plot confusion matrix between target test labels and predicted test labels
+plotconfusion(categorical(test_labels),categorical(predicted_classes_test'));
 
 
 
