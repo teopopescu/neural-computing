@@ -2,6 +2,8 @@
 %data loading
 initial_data =readtable('clean.csv');
 
+%Francesco loves this, this is great, let's do magic.
+
 %SMOTE
 [SMOTE_features,SMOTE_labels]=SMOTE( initial_data{:,1:13},  initial_data{:,14});
 SMOTE_features = array2table(SMOTE_features);
