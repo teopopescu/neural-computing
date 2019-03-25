@@ -1,20 +1,17 @@
 
 %% Data split
 %data loading
-data =readtable('clean.csv');
-
-%normalization [0,1]
-data_norm =normalize(data,'range');
+data =readtable('cleanX.csv');
 
 %train and test sets
-[rows,columns] = size(data_norm);
+[rows,columns] = size(data);
 % 85% of data will be used for training
-P = 0.85 ;
+P = 0.85;
 % Random split using index
 idx = randperm(rows);
 
-train = data_norm(idx(1:round(P*rows)),:) ; 
-test = data_norm(idx(round(P*rows)+1:end),:) ;
+train = data(idx(1:round(P*rows)),:) ; 
+test = data(idx(round(P*rows)+1:end),:) ;
 
 
 %% Bootstrapping aggregating (5 bags)
@@ -41,20 +38,33 @@ end
 
 %% SVM Model
 
-%First application of the model using default parameters
+%First application of the model using default parameters 
 
 model =fitcsvm(train(train_idx{1},1:13),train(train_idx{1},14));
 
-%prediction
-label=predict(model,train(val_idx{1},1:13));
-
-target= table2array(train(val_idx{1},14));
-
 mdlSVM = fitPosterior(model);
 [~,score_svm] = resubPredict(mdlSVM);
+[X,Y,T,AUC] = perfcurve(table2array(train(train_idx{1},14)),score_svm(:,2),1)
 
-[X,Y,T,AUC] = perfcurve(target,label,1);
+plot(X,Y)
+xlabel('False positive rate') 
+ylabel('True positive rate')
+title('ROC for Classification by SVM')
 
+%prediction
+label=predict(model,train(val_idx{1},1:13));
+target= table2array(train(val_idx{1},14));
+
+confusion = confusionmat(target,label);
+
+%TrueNegative | TruePositive | FalseNegative | FalsePositive
+TN=confusion(2,2);
+TP=confusion(1,1);
+FN=confusion(2,1);
+FP=confusion(1,2);
+
+%Accuracy
+first_model_accuracy=(TN+TP)/(TN+TP+FN+FP)
 
 %% GRID SEARCH ALGORITHM, 
 % inner loop using various number of predictor, the
@@ -191,6 +201,7 @@ disp(str4);
 bag2=table(modelidx2,1);
 str3 = ['bag training n : ',num2str(bag2)];
 disp(str3);
+fprintf('\n')
 
 % Since the selected model was too much affected by the particular bag rather than
 % the hyperparameters, results will be averaged and the most consistent model will be
@@ -237,7 +248,7 @@ str1 = ['Box constraint :',num2str(box_constraint)];
 disp(str1);
 
 avg_kernel=avg_table(avg_idx,2);
-str2 = ['Kernel type : ',num2str(kernel)];
+str2 = ['Kernel type : ',num2str(avg_kernel)];
 disp(str2);
 
 avg_korder=avg_table(avg_idx,3);
@@ -246,10 +257,10 @@ disp(str3);
 
 
 
-%% Best models given best avg hyperparameters
+%% Best 'averaged model' given best 'avg hyperparameters'
 %Here we select the model with the best accuracy among the 5 bags, first we
 %find the number of the bag
-[~,bag_num]=max(table2array(table_end((table_end.box==double(box_constraint)) & (table_end.Kernel==avg_kernel) & (table_end.order==avg_korder),8))) 
+[~,bag_num]=max(table2array(table_end((table_end.box==double(box_constraint)) & (table_end.Kernel==avg_kernel) & (table_end.order==avg_korder),8))); 
 
 %after we filter it using a boolean array and we got the best model
 SVMmodel= models{(table_end.bag==bag_num) & (table_end.box==double(box_constraint)) & (table_end.Kernel==avg_kernel) & (table_end.order==avg_korder)};
@@ -267,8 +278,8 @@ test_labels=double(table2array(test(:,14)));
 confusion = confusionmat(test_labels,test_results);
 
 %TrueNegative | TruePositive | FalseNegative | FalsePositive
-TN=confusion(1,1);
-TP=confusion(2,2);
+TN=confusion(2,2);
+TP=confusion(1,1);
 FN=confusion(2,1);
 FP=confusion(1,2);
 
